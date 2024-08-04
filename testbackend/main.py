@@ -5,9 +5,12 @@ from routes import main
 
 app = FastAPI()
 
-@app.get('/')
-def home():
-    return {"Hello","World"}
+
+@app.get("/")
+def root():
+    return {"Hello": "World"}
+
+
 
 app.add_middleware(
     CORSMiddleware,
