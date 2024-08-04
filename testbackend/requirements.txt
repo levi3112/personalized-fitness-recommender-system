@@ -1,0 +1,6 @@
+opencv-python-headless
+nltk
+pytesseract
+scikit-learn==1.3.2
+python-multipart
+
