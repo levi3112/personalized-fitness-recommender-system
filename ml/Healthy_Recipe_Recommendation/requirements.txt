@@ -1,0 +1,4 @@
+pandarallel==1.6.5
+PuLP==2.9.0
+fastapi
+uvicorn
