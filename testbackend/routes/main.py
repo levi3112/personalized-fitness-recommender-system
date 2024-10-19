@@ -1,14 +1,16 @@
 import cv2
 import numpy as np
-
 from fastapi import APIRouter, Form, UploadFile, File
+
+from typing import Optional
+import random
 
 from blood_report_analyzer.main import analyze_blood_sugar_report
 from diet_plan_recommender.main import get_meal_plan
 from nutrition_need_calculator.diseases import get_diseases
 from nutrition_need_calculator.need_calculator import get_dietary_need
 from medic.main import calculate_bmi, calculate_dream_weight
-from workout_routine_recommender.recommender import predict_workout_plan
+from workout_routine_recommender.recommender import predict_workout_plan, predict_workout_plan_v2
 
 router = APIRouter(
     prefix="/api",
@@ -17,20 +19,22 @@ router = APIRouter(
 )
 
 
-@router.post("/")
+@router.post("")
 async def root(
-        height: int = Form(...),
-        weight: int = Form(...),
-        age: int = Form(...),
-        gender: str = Form(...),
-        image: UploadFile = File(...),
-        diseases_info: str = Form(None),
+        height: int = Form(175),
+        weight: int = Form(85),
+        age: int = Form(21),
+        gender: str = Form("Male"),
+        image: Optional[UploadFile] = File(None),
+        diseases_info: str = Form(""),
+        num_of_exercises: int = Form(10)
 ):
     print("data: ", )
     bmi = calculate_bmi(weight, height)
     dream_weight = calculate_dream_weight(weight, bmi)
+    diseases = get_diseases(None, bmi)
 
-    if image and image.content_type != "image/jpeg":
+    if (image is None )or (image and image.content_type != "image/jpeg"):
         # return {300: {"description": "Only jpeg images are supported"}} # TODO fix this
         diseases = get_diseases(None, bmi)
     else:
@@ -45,17 +49,27 @@ async def root(
             diseases = get_diseases(None, bmi)
 
     nutrition_need = get_dietary_need(weight, height, age, gender.lower())  # 'male' 'female'
-    workout_plan = predict_workout_plan(gender, age, weight, dream_weight, bmi)  # TODO gender - 'Male' 'Female'
+    workout_plan_1 = predict_workout_plan_v2(gender, age, weight, dream_weight, bmi)  # TODO gender - 'Male' 'Female'
 
-    meal_plan = get_meal_plan(['low_sodium_diet', 'low_fat_diet'], diseases, ['calcium', 'vitamin_c'], ['non-veg'],
-                              'i love indian')
+    # Generate workout_plan 10 times and store in a list
+    workout_plan_list = []
+    for _ in range(num_of_exercises):
+       # Add small random variations to weight and dream_weight for each iteration
+        randomized_weight = weight + random.uniform(-2, 2)  # Adding variation between -2 to 2 kg
+        randomized_dream_weight = dream_weight + random.uniform(-1, 1)  # Variation in dream weight
+
+        workout_plan = predict_workout_plan(gender, age, randomized_weight, randomized_dream_weight, bmi)
+        workout_plan_list.append(workout_plan)
+
+    # meal_plan = get_meal_plan(['low_sodium_diet', 'low_fat_diet'], diseases, ['calcium', 'vitamin_c'], ['non-veg'],
+    #                           'i love indian')
     # ['low_sodium_diet','low_fat_diet'], ['diabeties'], ['calcium','vitamin_c'], ['non-veg'],'i love indian'
 
     if diseases_info is not None:
-        workout_plan = "Not recommended until be validated by a doctor! " + workout_plan
+        workout_plan_1 = "Not recommended until be validated by a doctor! " + workout_plan_1
 
     return {
         "need": nutrition_need,
-        "workout_plan": workout_plan,
-        "meal_plan": meal_plan,
+        "workout_plan": workout_plan_list
+        # "meal_plan": meal_plan,
     }
