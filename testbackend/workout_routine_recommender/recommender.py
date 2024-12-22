@@ -35,8 +35,8 @@ def predict_workout_plan(
                                    columns=cat_features + num_features)
 
     # Use the model to predict the exercise and intensity
-    exercise_encoded, intensity, duration = loaded_model.predict(new_observation)[0]
-
+    exercise_encoded, intensity, duration, = loaded_model.predict(new_observation)[0]
+    print(f"predict v1: { loaded_model.predict(new_observation)[0]}", )
     # Decode 'Exercise' back to its original form
     exercise = loaded_le.inverse_transform([int(exercise_encoded)])[0]
     return {
@@ -61,6 +61,7 @@ def predict_workout_plan_v2(
 
     # Use the model to predict the exercise and intensity
     exercise_encoded, intensity, duration = loaded_model.predict(new_observation)[0]
+    print(f"predict v2: { loaded_model.predict(new_observation)[0]}", )
 
     # Decode 'Exercise' back to its original form
     exercise = loaded_le.inverse_transform([int(exercise_encoded)])[0]
