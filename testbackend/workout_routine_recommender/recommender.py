@@ -53,15 +53,17 @@ def predict_workout_plan(
     image = exercise_details.get("Image", "No image available")
     video = exercise_details.get("Video", "No video available")
     description = exercise_details.get("Description", "No description available")
+    id = exercise_details.get("Id", "")
 
     return {
+            "id":id,
             "exercise": exercise,
             "intensity": intensity,
             "duration": duration,
             "calories_burned":calories_burned,
             "image": image,
             "video": video,
-            "description": description
+            "description": description,
         }
 
 def predict_workout_plan_v2(
