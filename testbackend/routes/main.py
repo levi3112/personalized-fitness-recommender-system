@@ -19,7 +19,7 @@ router = APIRouter(
 )
 
 
-@router.get("")
+@router.post("")
 async def root(
         height: int = Form(175),
         weight: int = Form(85),
