@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from fastapi import APIRouter, Form, UploadFile, File
-
+from collections import defaultdict
 from typing import Optional
 import random
 
@@ -19,7 +19,7 @@ router = APIRouter(
 )
 
 
-@router.post("")
+@router.get("")
 async def root(
         height: int = Form(175),
         weight: int = Form(85),
@@ -27,7 +27,7 @@ async def root(
         gender: str = Form("Male"),
         image: Optional[UploadFile] = File(None),
         diseases_info: str = Form(""),
-        num_of_exercises: int = Form(10)
+        num_of_exercises: int = Form(15)
 ):
     print("data: ", )
     bmi = calculate_bmi(weight, height)
@@ -52,14 +52,34 @@ async def root(
     workout_plan_1 = predict_workout_plan_v2(gender, age, weight, dream_weight, bmi)  # TODO gender - 'Male' 'Female'
 
     # Generate workout_plan 10 times and store in a list
-    workout_plan_list = []
-    for _ in range(num_of_exercises):
-       # Add small random variations to weight and dream_weight for each iteration
-        randomized_weight = weight + random.uniform(-2, 2)  # Adding variation between -2 to 2 kg
-        randomized_dream_weight = dream_weight + random.uniform(-1, 1)  # Variation in dream weight
+    # workout_plan_list = []
+    # for _ in range(num_of_exercises):
+    #    # Add small random variations to weight and dream_weight for each iteration
+    #     randomized_weight = weight + random.uniform(-2, 2)  # Adding variation between -2 to 2 kg
+    #     randomized_dream_weight = dream_weight + random.uniform(-1, 1)  # Variation in dream weight
 
+    #     workout_plan = predict_workout_plan(gender, age, randomized_weight, randomized_dream_weight, bmi)
+    #     workout_plan_list.append(workout_plan)
+
+    # Dictionary to count the occurrences of each exercise
+    exercise_counts = defaultdict(int)
+    max_occurrences = 5  # Maximum occurrences for each exercise
+
+    workout_plan_list = []
+    while len(workout_plan_list) < num_of_exercises:
+        # Add small random variations to weight and dream_weight
+        randomized_weight = weight + random.uniform(-5, 5)  # Adding variation between -2 to 2 kg
+        randomized_dream_weight = dream_weight + random.uniform(-4, 4)  # Variation in dream weight
+
+        # Predict a workout plan
         workout_plan = predict_workout_plan(gender, age, randomized_weight, randomized_dream_weight, bmi)
-        workout_plan_list.append(workout_plan)
+
+        # Check if the exercise has exceeded the max allowed occurrences
+        exercise_name = workout_plan["exercise"]
+        if exercise_counts[exercise_name] < max_occurrences:
+            workout_plan_list.append(workout_plan)
+            exercise_counts[exercise_name] += 1
+
 
     # meal_plan = get_meal_plan(['low_sodium_diet', 'low_fat_diet'], diseases, ['calcium', 'vitamin_c'], ['non-veg'],
     #                           'i love indian')
