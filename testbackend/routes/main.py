@@ -23,6 +23,7 @@ router = APIRouter(
 async def root(
         height: int = Form(175),
         weight: int = Form(85),
+        dream_weight: int = Form(0),
         age: int = Form(21),
         gender: str = Form("Male"),
         image: Optional[UploadFile] = File(None),
@@ -31,8 +32,10 @@ async def root(
 ):
     print("data: ", )
     bmi = calculate_bmi(weight, height)
-    dream_weight = calculate_dream_weight(weight, bmi)
+    dream_weight_cal = dream_weight if dream_weight != 0 else calculate_dream_weight(weight, bmi)
     diseases = get_diseases(None, bmi)
+
+    print(f"data: ${dream_weight_cal}")
 
     if (image is None )or (image and image.content_type != "image/jpeg"):
         # return {300: {"description": "Only jpeg images are supported"}} # TODO fix this
@@ -49,7 +52,7 @@ async def root(
             diseases = get_diseases(None, bmi)
 
     nutrition_need = get_dietary_need(weight, height, age, gender.lower())  # 'male' 'female'
-    workout_plan_1 = predict_workout_plan_v2(gender, age, weight, dream_weight, bmi)  # TODO gender - 'Male' 'Female'
+    workout_plan_1 = predict_workout_plan_v2(gender, age, weight, dream_weight_cal, bmi)  # TODO gender - 'Male' 'Female'
 
     # Generate workout_plan 10 times and store in a list
     # workout_plan_list = []
@@ -63,13 +66,13 @@ async def root(
 
     # Dictionary to count the occurrences of each exercise
     exercise_counts = defaultdict(int)
-    max_occurrences = 5  # Maximum occurrences for each exercise
+    max_occurrences = 8  # Maximum occurrences for each exercise
 
     workout_plan_list = []
     while len(workout_plan_list) < num_of_exercises:
         # Add small random variations to weight and dream_weight
         randomized_weight = weight + random.uniform(-5, 5)  # Adding variation between -2 to 2 kg
-        randomized_dream_weight = dream_weight + random.uniform(-4, 4)  # Variation in dream weight
+        randomized_dream_weight = dream_weight_cal + random.uniform(-4, 4)  # Variation in dream weight
 
         # Predict a workout plan
         workout_plan = predict_workout_plan(gender, age, randomized_weight, randomized_dream_weight, bmi)
